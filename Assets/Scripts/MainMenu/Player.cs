@@ -2,7 +2,7 @@
 
 public class Player : MonoBehaviour
 {
-    private const string httpServer = "https://localhost:44340/";
+    private const string httpServer = "https://localhost:44344/";
     public string GetHttpServer()
     {
         return httpServer;

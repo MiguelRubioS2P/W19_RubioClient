@@ -19,15 +19,18 @@ public class Register : MonoBehaviour
 
     private void Start()
     {
+        playerManager = FindObjectOfType<Player>();
+
         httpServer = playerManager.GetHttpServer();
     }
 
     public void OnRegisterButtonClick()
     {
-        
+        StartCoroutine(RegisterNewUser());   
     }
 
-    private void RegisterNewUser()
+    //Registramos nos da un 200, vamos a comprobar la base de datos
+    private IEnumerator RegisterNewUser()
     {
         if (string.IsNullOrEmpty(emailInputField.text))
         {
@@ -42,10 +45,30 @@ public class Register : MonoBehaviour
             throw new Exception("Passwords don't match");
         }
 
+        UnityWebRequest httpClient = new UnityWebRequest(httpServer + "api/Account/Register", "POST");
+
+
         AspNetUserRegister newUser = new AspNetUserRegister();
         newUser.Email = emailInputField.text;
         newUser.Password = passwordInputField.text;
         newUser.ConfirmPassword = confirmPasswordInputField.text;
+
+        string jsonData = JsonUtility.ToJson(newUser);
+        byte[] dataToSend = Encoding.UTF8.GetBytes(jsonData);
+        httpClient.uploadHandler = new UploadHandlerRaw(dataToSend);
+
+        httpClient.SetRequestHeader("Content-Type", "application/json");
+
+        yield return httpClient.SendWebRequest();
+
+        if(httpClient.isNetworkError || httpClient.isHttpError)
+        {
+            throw new Exception("OnRegisterButtonClick: Network Error " + httpClient.error);
+        }
+
+        messageBoardText.text += "\n" + httpClient.responseCode;
+
+        httpClient.Dispose();
 
 
 
